@@ -19,7 +19,7 @@ func worker(functions []func()error, maxTaskQty int, maxErrQty int) {
 			break
 		}
 
-		// different time for call goroutines
+		// just for demonstration
 		time.Sleep(1 * time.Second)
 
 		wg.Add(1)
