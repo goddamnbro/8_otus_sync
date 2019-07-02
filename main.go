@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 )
 
 
@@ -11,19 +12,30 @@ func worker(functions []func()error, maxTaskQty int, maxErrQty int) {
 
 	var wg sync.WaitGroup
 
+	quit := make(chan bool, maxErrQty * 2)
+
 	for index, function := range functions {
 		if index == maxTaskQty {
 			break
 		}
 
+		// different time for call goroutines
+		time.Sleep(1 * time.Second)
+
 		wg.Add(1)
 		go func(f func()error) {
 			defer wg.Done()
 
+			if len(quit) >= maxErrQty {
+				return
+			}
+
 			err := f()
 			if err != nil {
+				quit <- true
 				log.Println("Error:", err.Error())
 			}
+
 		}(function)
 	}
 
@@ -44,7 +56,15 @@ func main() {
 			log.Println("3d call")
 			return fmt.Errorf("error 3")
 		},
+		func() error {
+			log.Println("4th call")
+			return nil
+		},
+		func() error {
+			log.Println("5th call")
+			return nil
+		},
 	}
 
-	worker(functions, 3, 1)
+	worker(functions, 4, 2)
 }
